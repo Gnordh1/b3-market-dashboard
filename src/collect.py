@@ -12,7 +12,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# Ações do Ibovespa que vamos monitorar
 TICKERS = [
     "PETR4.SA",  # Petrobras
     "VALE3.SA",  # Vale
@@ -24,11 +23,9 @@ TICKERS = [
     "BBAS3.SA",  # Banco do Brasil
 ]
 
-# Período de coleta
 END_DATE = datetime.today().strftime("%Y-%m-%d")
 START_DATE = (datetime.today() - timedelta(days=365 * 2)).strftime("%Y-%m-%d")
 
-# Pasta de saída dos dados brutos
 OUTPUT_DIR = "data/raw"
 
 def create_output_dir(path: str) -> None:
@@ -51,19 +48,15 @@ def fetch_stock_data(ticker: str, start: str, end: str) -> pd.DataFrame | None:
             logger.warning(f"Nenhum dado retornado para {ticker}. Verifique o ticker.")
             return None
 
-        # Achata colunas multi-nível (pode ocorrer com yfinance >= 0.2)
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
 
-        # Padroniza nomes das colunas
         df.columns = [col.lower().replace(" ", "_") for col in df.columns]
 
-        # Adiciona coluna de identificação e reseta o index
         df["ticker"] = ticker
         df = df.reset_index().rename(columns={"Date": "date", "index": "date"})
         df["date"] = pd.to_datetime(df["date"])
 
-        # Garante a ordem das colunas
         cols = ["date", "ticker", "open", "high", "low", "close", "volume"]
         df = df[[c for c in cols if c in df.columns]]
 
@@ -84,11 +77,7 @@ def save_to_csv(df: pd.DataFrame, ticker: str, output_dir: str) -> None:
 
 
 def collect_all(tickers: list, start: str, end: str, output_dir: str) -> pd.DataFrame:
-    """
-    Coleta dados de todos os tickers e consolida em um único DataFrame.
 
-    Também salva um arquivo individual por ticker e um arquivo consolidado.
-    """
     all_data = []
 
     for ticker in tickers:
@@ -101,17 +90,14 @@ def collect_all(tickers: list, start: str, end: str, output_dir: str) -> pd.Data
         logger.error("Nenhum dado foi coletado. Verifique sua conexão e os tickers.")
         return pd.DataFrame()
 
-    # Consolida tudo em um único CSV
     consolidated = pd.concat(all_data, ignore_index=True)
     consolidated_path = os.path.join(output_dir, "all_stocks.csv")
     consolidated.to_csv(consolidated_path, index=False)
-    logger.info(f"\nConsolidado salvo em: {consolidated_path}")
     logger.info(f"Total de registros: {len(consolidated)}")
 
     return consolidated
 
 if __name__ == "__main__":
-    logger.info("=== Iniciando coleta de dados da B3 ===")
     logger.info(f"Período: {START_DATE} → {END_DATE}")
     logger.info(f"Tickers: {TICKERS}\n")
 
