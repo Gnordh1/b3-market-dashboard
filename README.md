@@ -32,7 +32,6 @@ b3-market-dashboard/
 │   ├── transform.py    # Limpeza e feature engineering
 │   ├── load.py         # Carga no PostgreSQL
 │   └── predict.py      # Modelo de previsão Prophet
-├── .env.example        # Exemplo de variáveis de ambiente
 ├── requirements.txt    # Dependências do projeto
 └── README.md
 ```
